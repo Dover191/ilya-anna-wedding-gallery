@@ -13,5 +13,7 @@
 !cmd/**
 !/public
 !/public/**
+!/qr
+!/qr/**
 !.env.example
 !README.md

@@ -36,7 +36,7 @@ button {
     place-items: center;
     overflow: hidden;
     color: white;
-    background: url('/hero-wedding.jpg') center 42% / cover no-repeat;
+    background: url('/hero-wedding.png') center 42% / cover no-repeat;
 }
 
 .hero__shade {
