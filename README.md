@@ -1,43 +1,54 @@
-# Ilya & Anna Wedding Gallery
+# Wedding gallery for Ilya and Anna
 
-Mobile-first wedding gallery for guests. People open the site from a QR code, upload photos/videos, browse the shared gallery, open media in a full-screen viewer, and download files.
+Свадебная галерея на React и Go. Гости открывают сайт по QR-коду, загружают фото и видео и просматривают материалы в общей галерее.
 
-## Local Setup
+Файлы загружаются напрямую в Timeweb S3 по временным подписанным ссылкам. Ключи S3 используются только Go-сервером и не попадают в браузер.
+
+## Локальный запуск
+
+1. Скопируйте `.env.example` в `.env` и заполните ключи S3.
+2. Соберите фронтенд и запустите сервер:
 
 ```bash
-npm install
-npm run dev
+npm ci
+npm run build
+go run ./cmd/server
 ```
 
-Create `.env.local` from `.env.example` when testing real S3 uploads.
+Сайт откроется на `http://localhost:3000`.
 
-## Timeweb Environment Variables
+## Переменные окружения
 
-```text
-S3_ENDPOINT=https://s3.twcstorage.ru
-S3_REGION=ru-1
-S3_BUCKET=ilya-anna-wedding
-S3_ACCESS_KEY=...
-S3_SECRET_KEY=...
-S3_PREFIX=guest-media/2026-09-06
-S3_PUBLIC_BASE_URL=https://s3.twcstorage.ru/ilya-anna-wedding
-MAX_UPLOAD_MB=300
+```env
+MINIO_ENDPOINT=s3.twcstorage.ru
+MINIO_ACCESS_KEY=<Timeweb S3 Access Key>
+MINIO_SECRET_KEY=<Timeweb S3 Secret Access Key>
+MINIO_BUCKET=ilya-anna-wedding
+MINIO_USE_SSL=true
+MINIO_REGION=ru-1
+MINIO_PREFIX=guest-media/2026-09-06
+PORT=3000
+PRESIGNED_PUT_TTL=15m
+PRESIGNED_GET_TTL=1h
+MAX_FILE_SIZE=314572800
 ```
 
-Do not put `S3_SECRET_KEY` into browser code or a public repository.
+`MINIO_ENDPOINT` указывается без `https://`. Значение `MAX_FILE_SIZE` задаётся в байтах, текущее ограничение равно 300 МБ на один файл.
 
-## Bucket CORS
+## Деплой в Timeweb App Platform
 
-```json
-[
-  {
-    "AllowedOrigins": ["*"],
-    "AllowedMethods": ["GET", "POST", "PUT", "HEAD"],
-    "AllowedHeaders": ["*"],
-    "ExposeHeaders": ["ETag"],
-    "MaxAgeSeconds": 3600
-  }
-]
-```
+1. Выберите `Docker` → `Dockerfile`.
+2. Подключите репозиторий и ветку `main` или подготовленную ветку деплоя.
+3. Оставьте путь к директории проекта пустым.
+4. Не подключайте приватную сеть.
+5. Добавьте переменные окружения из списка выше через панель Timeweb.
+6. Укажите путь проверки состояния `/api/health`.
+7. Запустите деплой.
 
-After connecting a real domain, replace `*` in `AllowedOrigins` with that domain.
+После деплоя добавьте точный HTTPS-адрес приложения в `Allowed Origins` правила CORS бакета. Разрешите методы `GET`, `PUT`, `HEAD`, заголовки `Content-Type` и `x-amz-*`, а в `Expose Headers` укажите `ETag`.
+
+## API
+
+- `POST /api/uploads/presign` создаёт временную ссылку для загрузки файла.
+- `GET /api/photos` возвращает медиа и временные ссылки просмотра и скачивания.
+- `GET /api/health` используется для проверки состояния приложения.
