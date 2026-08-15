@@ -30,7 +30,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 
 FROM alpine:3.22
 
-RUN apk add --no-cache ca-certificates \
+RUN apk add --no-cache ca-certificates curl \
     && adduser -D -H -u 10001 gallery
 
 WORKDIR /app
@@ -42,5 +42,8 @@ USER gallery
 
 ENV PORT=3000
 EXPOSE 3000
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:3000/api/health"]
 
 ENTRYPOINT ["./gallery"]
