@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+node_modules
+dist
+*.log
+Dockerfile.backend
+Dockerfile.frontend
+docker-compose.yml
+nginx.conf
+.gitlab-ci.yml
