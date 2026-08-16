@@ -15,5 +15,7 @@
 !/public/**
 !/qr
 !/qr/**
+!/docs
+!/docs/**
 !.env.example
 !README.md
