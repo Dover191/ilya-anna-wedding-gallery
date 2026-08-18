@@ -252,6 +252,26 @@ h1 i {
     background: #ddd4ca;
 }
 
+.photo-card__number {
+    position: absolute;
+    z-index: 2;
+    top: 11px;
+    left: 11px;
+    min-width: 31px;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 999px;
+    color: white;
+    background: rgba(26, 23, 20, .48);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .14);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-align: center;
+    pointer-events: none;
+    backdrop-filter: blur(7px);
+}
+
 .photo-card--1, .photo-card--4 {
     grid-row: span 8;
 }
@@ -375,6 +395,7 @@ h1 i {
 
 .lightbox__close {
     position: fixed;
+    z-index: 3;
     top: 22px;
     right: 22px;
     width: 44px;
@@ -387,17 +408,65 @@ h1 i {
     background: rgba(255, 255, 255, .12);
 }
 
-.lightbox__download {
+.lightbox__counter {
     position: fixed;
+    z-index: 3;
+    top: 28px;
+    left: 50%;
+    padding: 7px 12px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 999px;
+    color: white;
+    background: rgba(255, 255, 255, .1);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    transform: translateX(-50%);
+    backdrop-filter: blur(8px);
+}
+
+.lightbox__actions {
+    position: fixed;
+    z-index: 3;
     bottom: 25px;
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.lightbox__like,
+.lightbox__download {
+    height: 48px;
     padding: 13px 19px;
     border: 0;
     border-radius: 999px;
     color: #2b2824;
     background: white;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, .2);
+}
+
+.lightbox__like {
+    width: 48px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    transition: color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.lightbox__like:hover {
+    transform: scale(1.05);
+}
+
+.lightbox__like.is-liked {
+    color: white;
+    background: #d9485f;
+}
+
+.lightbox__download {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .upload-backdrop {
@@ -783,12 +852,5 @@ h1 i {
     .lightbox__nav { top: auto; bottom: 18px; transform: none; }
     .lightbox__nav--prev { left: 14px; }
     .lightbox__nav--next { right: 14px; }
-    .lightbox__download { bottom: 21px; }
-}
-
-
-.categories__more {
-    min-width: 46px;
-    font-size: 18px !important;
-    line-height: 1;
+    .lightbox__actions { bottom: 20px; }
 }

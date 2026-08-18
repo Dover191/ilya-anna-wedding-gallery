@@ -3,7 +3,6 @@ import { categories as defaultCategories } from '../data.js'
 import { getMedia } from '../api.js'
 
 const LIKES_KEY = 'wedding-gallery:likes'
-const COLLAPSED_CATEGORY_COUNT = 5
 
 const mediaLabel = (item) => item.mediaType === 'video' ? 'видео' : 'фото'
 
@@ -18,7 +17,6 @@ const readStoredLikes = () => {
 
 export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
   const [activeCategory, setActiveCategory] = useState('all')
-  const [categoriesExpanded, setCategoriesExpanded] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const [liked, setLiked] = useState(readStoredLikes)
   const [media, setMedia] = useState([])
@@ -63,14 +61,6 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
     ]
   }, [uploadCategories])
 
-  const visibleCategories = useMemo(() => {
-    if (categoriesExpanded || categories.length <= COLLAPSED_CATEGORY_COUNT) return categories
-    const first = categories.slice(0, COLLAPSED_CATEGORY_COUNT)
-    const active = categories.find((item) => item.id === activeCategory)
-    if (active && !first.some((item) => item.id === active.id)) return [...first.slice(0, -1), active]
-    return first
-  }, [activeCategory, categories, categoriesExpanded])
-
   const visibleMedia = useMemo(() => {
     if (activeCategory === 'all') return media
     if (activeCategory === 'favorites') return media.filter((item) => liked.includes(item.id))
@@ -79,6 +69,7 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
 
   const selectedIndex = visibleMedia.findIndex((item) => item.id === selectedId)
   const selected = selectedIndex >= 0 ? visibleMedia[selectedIndex] : null
+  const selectedIsLiked = selected ? liked.includes(selected.id) : false
 
   const closeLightbox = useCallback(() => setSelectedId(null), [])
   const showPrevious = useCallback(() => {
@@ -122,8 +113,6 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
     anchor.remove()
   }
 
-  const hasHiddenCategories = categories.length > COLLAPSED_CATEGORY_COUNT
-
   return (
     <main className="gallery" id="gallery">
       <div className="gallery__intro">
@@ -133,21 +122,11 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
       </div>
 
       <nav className="categories" aria-label="Категории медиа">
-        {visibleCategories.map((category) => (
+        {categories.map((category) => (
           <button key={category.id} className={activeCategory === category.id ? 'is-active' : ''} onClick={() => setActiveCategory(category.id)}>
             {category.isFavorites ? '♥ ' : ''}{category.label}
           </button>
         ))}
-        {hasHiddenCategories && (
-          <button
-            className="categories__more"
-            onClick={() => setCategoriesExpanded((value) => !value)}
-            aria-expanded={categoriesExpanded}
-            aria-label={categoriesExpanded ? 'Свернуть категории' : 'Показать все категории'}
-          >
-            {categoriesExpanded ? 'Свернуть' : '…'}
-          </button>
-        )}
       </nav>
 
       {loading && <div className="gallery-state" aria-live="polite">Загружаем медиа…</div>}
@@ -160,6 +139,7 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
         <section className="photo-grid">
           {visibleMedia.map((item, index) => (
             <article className={`photo-card photo-card--${(index % 5) + 1}`} key={item.id}>
+              <span className="photo-card__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
               <button className="photo-card__image" onClick={() => setSelectedId(item.id)} aria-label={`Открыть ${mediaLabel(item)}: ${item.alt}`}>
                 {item.mediaType === 'video' ? (
                   <><video src={item.src} muted playsInline preload="metadata" /><span className="photo-card__play" aria-hidden="true">▶</span></>
@@ -178,6 +158,7 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
 
       {selected && (
         <div className="lightbox" role="dialog" aria-modal="true" aria-label={selected.alt} onClick={closeLightbox}>
+          <span className="lightbox__counter" aria-live="polite">{selectedIndex + 1} / {visibleMedia.length}</span>
           <button className="lightbox__close" onClick={closeLightbox} aria-label="Закрыть"><span aria-hidden="true">×</span></button>
           {visibleMedia.length > 1 && <button className="lightbox__nav lightbox__nav--prev" onClick={(event) => { event.stopPropagation(); showPrevious() }} aria-label="Предыдущее медиа">‹</button>}
           <div className="lightbox__content" onClick={(event) => event.stopPropagation()}>
@@ -186,7 +167,18 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
               : <img src={selected.src} alt={selected.alt} />}
           </div>
           {visibleMedia.length > 1 && <button className="lightbox__nav lightbox__nav--next" onClick={(event) => { event.stopPropagation(); showNext() }} aria-label="Следующее медиа">›</button>}
-          <button className="lightbox__download" onClick={(event) => { event.stopPropagation(); download(selected) }}><span aria-hidden="true">↓</span> Скачать {mediaLabel(selected)}</button>
+          <div className="lightbox__actions" onClick={(event) => event.stopPropagation()}>
+            <button
+              className={`lightbox__like${selectedIsLiked ? ' is-liked' : ''}`}
+              onClick={() => toggleLike(selected.id)}
+              aria-label={selectedIsLiked ? 'Убрать из любимых' : 'Добавить в любимые'}
+              aria-pressed={selectedIsLiked}
+              title={selectedIsLiked ? 'Убрать из любимых' : 'Добавить в любимые'}
+            >
+              <span aria-hidden="true">{selectedIsLiked ? '♥' : '♡'}</span>
+            </button>
+            <button className="lightbox__download" onClick={() => download(selected)}><span aria-hidden="true">↓</span> Скачать</button>
+          </div>
         </div>
       )}
     </main>
