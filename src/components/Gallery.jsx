@@ -3,6 +3,7 @@ import { categories as defaultCategories } from '../data.js'
 import { getMedia } from '../api.js'
 
 const LIKES_KEY = 'wedding-gallery:likes'
+const HIDDEN_FILTER_CATEGORIES = new Set(['H-e-l-l-o', '\u0EC2', '\u215E', 'other'])
 
 const mediaLabel = (item) => item.mediaType === 'video' ? 'видео' : 'фото'
 
@@ -57,7 +58,7 @@ export default function Gallery({ guestName, refreshKey, onCategoriesChange }) {
     return [
       allCategory,
       { id: 'favorites', label: 'Любимые', isFavorites: true },
-      ...uploadCategories.filter((item) => item.id !== 'all'),
+      ...uploadCategories.filter((item) => item.id !== 'all' && !HIDDEN_FILTER_CATEGORIES.has(item.id)),
     ]
   }, [uploadCategories])
 
