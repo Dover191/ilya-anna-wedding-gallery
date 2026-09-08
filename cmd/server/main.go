@@ -84,9 +84,9 @@ func main() {
 		minio:       client,
 		bucket:      bucket,
 		prefix:      strings.Trim(os.Getenv("MINIO_PREFIX"), "/"),
-		putExpiry:   envDuration("PRESIGNED_PUT_TTL", 5*time.Minute),
+		putExpiry:   envDuration("PRESIGNED_PUT_TTL", 2*time.Hour),
 		getExpiry:   envDuration("PRESIGNED_GET_TTL", time.Hour),
-		maxFileSize: envInt64("MAX_FILE_SIZE", 25*1024*1024),
+		maxFileSize: envInt64("MAX_FILE_SIZE", 1024*1024*1024),
 		logger:      logger,
 	}
 
@@ -198,7 +198,7 @@ func (s *server) presignUpload(w http.ResponseWriter, r *http.Request) {
 			"size_bytes", input.Size,
 			"max_file_size_bytes", s.maxFileSize,
 		)
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Размер файла должен быть не больше %d МБ", s.maxFileSize/(1024*1024)))
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("Размер файла должен быть не больше %s", displayFileSize(s.maxFileSize)))
 		return
 	}
 
@@ -549,4 +549,16 @@ func envDuration(name string, fallback time.Duration) time.Duration {
 		os.Exit(1)
 	}
 	return parsed
+}
+
+func displayFileSize(size int64) string {
+	const (
+		megabyte = int64(1024 * 1024)
+		gigabyte = int64(1024 * 1024 * 1024)
+	)
+
+	if size >= gigabyte && size%gigabyte == 0 {
+		return fmt.Sprintf("%d ГБ", size/gigabyte)
+	}
+	return fmt.Sprintf("%d МБ", size/megabyte)
 }

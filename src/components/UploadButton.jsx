@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { categories as defaultCategories } from '../data.js'
-import { uploadMedia } from '../api.js'
+import { isSupportedMedia, MAX_UPLOAD_SIZE, uploadMedia } from '../api.js'
 
 const MAX_FILES = 50
 
@@ -32,11 +32,22 @@ export default function UploadButton({ categories = defaultCategories, onUploade
   }, [open, status])
 
   const selectFiles = (event) => {
-    const selected = Array.from(event.target.files || []).filter((file) => file.type.startsWith('image/') || file.type.startsWith('video/')).slice(0, MAX_FILES)
+    const chosen = Array.from(event.target.files || [])
+    const supported = chosen.filter(isSupportedMedia)
+    const oversized = supported.filter((file) => file.size > MAX_UPLOAD_SIZE)
+    const selected = supported.filter((file) => file.size <= MAX_UPLOAD_SIZE).slice(0, MAX_FILES)
     setFiles(selected)
     setStatus('idle')
     setProgress(0)
-    setError(selected.length ? '' : 'Выберите файлы изображений или видео')
+    if (oversized.length) {
+      setError(oversized.length === 1
+        ? `Файл ${oversized[0].name} больше 1 ГБ и не был выбран`
+        : `${oversized.length} файлов больше 1 ГБ и не были выбраны`)
+    } else if (chosen.length > MAX_FILES) {
+      setError(`Можно загрузить не больше ${MAX_FILES} файлов за один раз`)
+    } else {
+      setError(selected.length ? '' : 'Выберите файлы изображений или видео')
+    }
   }
 
   const reset = () => {
